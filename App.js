@@ -15,21 +15,57 @@ import { ResultCard } from "./src/components/ResultCard";
 import { exchangeRateApi } from "./src/services/api";
 import { convertCurrency } from "./src/utils/convertCurrency";
 import { useState } from "react";
+import { ActivityIndicator } from "react-native";
+import { colors } from "./src/styles/colors";
 
 export default function App() {
-  const [amount, setAmount] = useState('');
-  const [fromCurrency, setFromCurrency] = useState('USD');
-  const [toCurrency, setToCurrency] = useState('BRL');
-  const [result, setResult] = useState('');
+  const [amount, setAmount] = useState("");
+  const [fromCurrency, setFromCurrency] = useState("USD");
+  const [toCurrency, setToCurrency] = useState("BRL");
+  const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [exchangeRate, setExchangeRate] = useState(null);
 
   async function fetchExchangeRate() {
-    const data = await exchangeRateApi(fromCurrency);
-    const rate = data.rates[toCurrency];
-    const convertedAmount = convertCurrency(amount, rate);
-    setResult(convertedAmount);
+    if (!amount) {
+      return;
     }
+
+    try {
+      setLoading(true);
+      const data = await exchangeRateApi(fromCurrency);
+      const rate = data?.rates?.[toCurrency];
+
+      if (!rate) {
+        setExchangeRate(null);
+        setResult("");
+        return;
+      }
+
+      const convertedAmount = convertCurrency(amount, rate);
+      if (convertedAmount === null) {
+        setExchangeRate(null);
+        setResult("");
+        return;
+      }
+
+      setExchangeRate(rate);
+      setResult(convertedAmount);
+    } catch (error) {
+      console.error("Erro ao converter moedas:", error);
+      setExchangeRate(null);
+      setResult("");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+function swapCurrencies() {
+  setFromCurrency(toCurrency);
+  setToCurrency(fromCurrency);
+  setResult("");
+}
+
 
   return (
     <KeyboardAvoidingView
@@ -63,7 +99,7 @@ export default function App() {
 
             <Input label="Valor: " value={amount} onChangeText={setAmount} />
 
-            <TouchableOpacity style={styles.swapButton}>
+            <TouchableOpacity style={styles.swapButton} onPress={swapCurrencies}>
               <Text style={styles.swapButtonText}>↑↓</Text>
             </TouchableOpacity>
 
@@ -82,18 +118,22 @@ export default function App() {
           </View>
 
           <TouchableOpacity
-            style={styles.convertButton}
+            style={[styles.convertButton, (!amount || loading) && styles.convertButtonDisable]}
             onPress={fetchExchangeRate}
           >
-            <Text style={styles.convertButtonText}>Converter</Text>
+            {loading ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <Text style={styles.convertButtonText}>Converter</Text>
+            )}
           </TouchableOpacity>
 
           <ResultCard
-            amount={amount}
+            exchangeRate={exchangeRate}
+            result={result}
             fromCurrency={fromCurrency}
             toCurrency={toCurrency}
-            result={result}
-            loading={loading}
+            currencies={currencies}
           />
         </View>
       </ScrollView>
