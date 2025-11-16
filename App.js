@@ -33,8 +33,7 @@ export default function App() {
 
     try {
       setLoading(true);
-      const data = await exchangeRateApi(fromCurrency);
-      const rate = data?.rates?.[toCurrency];
+      const rate = await exchangeRateApi(fromCurrency, toCurrency);
 
       if (!rate) {
         setExchangeRate(null);

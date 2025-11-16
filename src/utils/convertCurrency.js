@@ -24,6 +24,10 @@ function normalizeAmountValue(rawAmount) {
     return Number(sanitized);
 }
 
+function roundToTwoDecimals(value) {
+    return Math.round(value * 100) / 100;
+}
+
 export function convertCurrency(amount, rate) {
     try {
         const numericAmount = normalizeAmountValue(amount);
@@ -37,7 +41,10 @@ export function convertCurrency(amount, rate) {
             return null;
         }
 
-        return Number((numericAmount * numericRate).toFixed(2));
+        const rawValue = numericAmount * numericRate;
+        const roundedValue = roundToTwoDecimals(rawValue);
+
+        return roundedValue;
     } catch (error) {
         console.log(error);
         throw error;
