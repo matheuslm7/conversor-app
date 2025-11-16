@@ -1,14 +1,21 @@
 import { Text, TouchableOpacity } from "react-native";
 import { styles } from "./styles";
 
-export function Button({variant = "primary", onPress, currency}){
+export function Button({
+    variant = "primary",
+    onPress,
+    currency,
+    isSelected = false,
+}) {
+    const variantStyle =
+        variant === "primary" ? styles.buttonPrimary : styles.buttonSecondary;
 
     return (
         <TouchableOpacity 
         onPress={onPress}
         style={[
-            styles.button, 
-            variant === 'primary' ? styles.buttonPrimary : styles.buttonSecondary
+            styles.button,
+            isSelected ? variantStyle : styles.buttonUnselected,
         ]}>
 
             <Text style={styles.buttonText}>
